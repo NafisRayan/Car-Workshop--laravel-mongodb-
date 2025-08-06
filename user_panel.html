@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Appointment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+    <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-xl mt-10">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6 text-center">Book an Appointment</h2>
+        <form id="appointmentForm" method="POST" action="book_appointment.php" class="space-y-4">
+            <div>
+                <label class="block font-semibold mb-1">Name:</label>
+                <input type="text" name="clientName" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Address:</label>
+                <input type="text" name="address" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Phone:</label>
+                <input type="text" name="phone" required pattern="\d+" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Car License Number:</label>
+                <input type="text" name="carLicense" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Car Engine Number:</label>
+                <input type="text" name="carEngine" required pattern="\d+" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Appointment Date:</label>
+                <input type="date" name="appointmentDate" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Select Mechanic:</label>
+                <select name="mechanicId" id="mechanicSelect" required class="w-full border rounded px-3 py-2">
+                    <!-- Mechanics will be loaded here by JS -->
+                </select>
+            </div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded transition w-full">Book Appointment</button>
+        </form>
+        <div id="help" class="bg-blue-50 border border-blue-200 rounded p-4 mt-6">
+            <h4 class="font-semibold text-blue-800 mb-2">Help</h4>
+            <ul class="list-disc pl-5 text-gray-700">
+                <li>All fields are required.</li>
+                <li>Phone and Engine Number must be numeric.</li>
+                <li>You can only book one appointment per day.</li>
+                <li>Mechanics can handle up to 4 appointments per day.</li>
+            </ul>
+        </div>
+        <button onclick="document.getElementById('faqModal').style.display='block'" class="mt-4 bg-gray-600 hover:bg-gray-800 text-white py-2 px-4 rounded">FAQ</button>
+        <div id="faqModal" style="display:none;position:fixed;top:20%;left:30%;background:#fff;padding:20px;border:1px solid #333;z-index:50;" class="shadow-lg rounded-lg">
+            <h4 class="font-semibold text-blue-800 mb-2">Frequently Asked Questions</h4>
+            <ul class="list-disc pl-5 text-gray-700">
+                <li>Q: What if my desired mechanic is unavailable?<br>A: You can select another mechanic with available slots.</li>
+                <li>Q: Can I book multiple appointments on the same day?<br>A: No, only one appointment per day is allowed.</li>
+                <li>Q: How do I contact the workshop?<br>A: Use the phone number provided on the main page.</li>
+            </ul>
+            <button onclick="document.getElementById('faqModal').style.display='none'" class="mt-4 bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded">Close</button>
+        </div>
+    </div>
+    <script>
+        // Fetch mechanics and available slots
+        fetch('get_mechanics.php')
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('mechanicSelect');
+                data.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m._id;
+                    option.text = `${m.name} (${4 - m.count} slots left)`;
+                    option.disabled = m.count >= 4;
+                    select.appendChild(option);
+                });
+            });
+
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            const name = this.clientName.value.trim();
+            const address = this.address.value.trim();
+            const phone = this.phone.value.trim();
+            const carLicense = this.carLicense.value.trim();
+            const carEngine = this.carEngine.value.trim();
+            const appointmentDate = this.appointmentDate.value;
+            const mechanicId = this.mechanicId.value;
+
+            if (!name || !address || !phone || !carLicense || !carEngine || !appointmentDate || !mechanicId) {
+                alert('All fields are required.');
+                e.preventDefault();
+                return;
+            }
+            if (!/^\d+$/.test(phone)) {
+                alert('Phone must be numeric.');
+                e.preventDefault();
+                return;
+            }
+            if (!/^\d+$/.test(carEngine)) {
+                alert('Car Engine Number must be numeric.');
+                e.preventDefault();
+                return;
+            }
+            if (new Date(appointmentDate) < new Date()) {
+                alert('Appointment date must be today or later.');
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

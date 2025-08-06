@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Appointment List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+    <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl mt-10">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6 text-center">Appointment List (Admin Panel)</h2>
+        <table class="min-w-full bg-white border border-gray-300 rounded-lg overflow-hidden" id="appointmentsTable">
+            <thead class="bg-blue-100">
+                <tr>
+                    <th class="py-2 px-4 border-b">Client Name</th>
+                    <th class="py-2 px-4 border-b">Phone</th>
+                    <th class="py-2 px-4 border-b">Car License</th>
+                    <th class="py-2 px-4 border-b">Appointment Date</th>
+                    <th class="py-2 px-4 border-b">Mechanic</th>
+                    <th class="py-2 px-4 border-b">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Appointments will be loaded here by JS -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function loadAppointments() {
+            fetch('get_appointments.php')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.querySelector('#appointmentsTable tbody');
+                    tbody.innerHTML = '';
+                    data.forEach(app => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="py-2 px-4 border-b">${app.clientName}</td>
+                            <td class="py-2 px-4 border-b">${app.phone}</td>
+                            <td class="py-2 px-4 border-b">${app.carLicense}</td>
+                            <td class="py-2 px-4 border-b">
+                                <input type="date" value="${app.appointmentDate}" class="border rounded px-2 py-1" onchange="updateAppointment('${app._id}', this.value, null)">
+                            </td>
+                            <td class="py-2 px-4 border-b">
+                                <select class="border rounded px-2 py-1" onchange="updateAppointment('${app._id}', null, this.value)">
+                                    ${app.mechanics.map(m => `
+                                        <option value="${m._id}" ${m._id === app.mechanicId ? 'selected' : ''} ${m.count >= 4 ? 'disabled' : ''}>
+                                            ${m.name} (${4 - m.count} slots left)
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </td>
+                            <td class="py-2 px-4 border-b">
+                                <button onclick="deleteAppointment('${app._id}')" class="bg-red-600 hover:bg-red-800 text-white py-1 px-3 rounded">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+        }
+
+        function updateAppointment(id, date, mechanicId) {
+            fetch('update_appointment.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, date, mechanicId})
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert(msg);
+                loadAppointments();
+            });
+        }
+
+        function deleteAppointment(id) {
+            fetch('delete_appointment.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id})
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert(msg);
+                loadAppointments();
+            });
+        }
+
+        loadAppointments();
+    </script>
+</body>
+</html>
