@@ -125,3 +125,50 @@ The application uses **MongoDB** as its database. The database is named `worksho
 *   **Search and Filtering:** Add search and filtering options to the admin panel for easier appointment management.
 *   **Robust Error Handling and Logging:** Implement a comprehensive error logging system.
 *   **API Documentation:** Provide API documentation for the backend endpoints.
+
+## Testing and Verification
+
+To verify the application's functionality and ensure the database connection is working, you can perform the following tests:
+
+1.  **Verify MongoDB Extension:**
+    *   Open your terminal in the project directory.
+    *   Run: `php -r "var_dump(extension_loaded('mongodb'));"`
+    *   Expected output: `bool(true)`
+
+2.  **Test Database Connection:**
+    *   Create a temporary file named `test_db_connection.php` in the project root with the following content:
+        ```php
+        <?php
+        require 'vendor/autoload.php';
+
+        try {
+            $uri = getenv('MONGODB_URI') ?: "mongodb+srv://vaugheu:tempA@cluster0.yfpgp8o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+            $client = new MongoDB\Client($uri);
+            $client->listDatabases();
+            echo 'Successfully connected to MongoDB!' . PHP_EOL;
+        } catch (Exception $e) {
+            echo 'Connection failed: ' . $e->getMessage() . PHP_EOL;
+        }
+        ?>
+        ```
+    *   Run: `php test_db_connection.php`
+    *   Expected output: `Successfully connected to MongoDB!`
+    *   After testing, you can remove this temporary file: `rm test_db_connection.php`
+
+3.  **Initialize Mechanics Data:**
+    *   Run: `php init_mechanics.php`
+    *   Expected output: `Sample mechanics inserted.` (This populates the `mechanics` collection if it's empty.)
+
+4.  **Test `get_mechanics.php`:**
+    *   Ensure your PHP built-in web server is running (`php -S localhost:8000`).
+    *   Open a new terminal and run: `curl http://localhost:8000/get_mechanics.php`
+    *   Expected output: A JSON array containing mechanic data (e.g., `[{"_id":"...","name":"Mr. Rahim","count":0},...]`). The `count` might be 0 if no appointments are booked yet.
+
+5.  **Manual UI Testing:**
+    *   Navigate to `http://localhost:8000/index.html` in your web browser.
+    *   **User Panel:**
+        *   Try booking an appointment. Ensure mechanics are listed, and the booking process completes successfully.
+        *   Verify that error messages appear for invalid inputs or full mechanics.
+    *   **Admin Panel:**
+        *   View appointments. Check if newly booked appointments appear.
+        *   Attempt to update and delete appointments.
